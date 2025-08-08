@@ -55,7 +55,7 @@ func (u *listClientsUseCase) Execute(ctx context.Context, p dto.ListClientsParam
 
 	cc := make([]dto.Client, 0, len(uu))
 	for _, u := range uu {
-		cc = append(cc, dto.NewFromDomain(u))
+		cc = append(cc, dto.FromDomain(u))
 	}
 
 	pages := (total + p.PageSize - 1) / p.PageSize

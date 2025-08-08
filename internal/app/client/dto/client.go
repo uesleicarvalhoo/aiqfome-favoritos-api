@@ -12,7 +12,7 @@ type Client struct {
 	Active bool    `json:"active"`
 }
 
-func NewFromDomain(u user.User) Client {
+func FromDomain(u user.User) Client {
 	return Client{
 		ID:     u.ID,
 		Name:   u.Name,

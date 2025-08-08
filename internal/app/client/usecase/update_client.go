@@ -56,7 +56,7 @@ func (u *updateClientUseCase) Execute(ctx context.Context, p dto.UpdateClientPar
 		})
 	}
 
-	return dto.NewFromDomain(usr), nil
+	return dto.FromDomain(usr), nil
 }
 
 func (u *updateClientUseCase) update(usr *user.User, p dto.UpdateClientParams) error {

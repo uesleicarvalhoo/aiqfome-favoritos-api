@@ -8,6 +8,18 @@ import (
 )
 
 var (
+	findClientUcOnce sync.Once
+	findClientUc     client.FindClientUseCase
+)
+
+func FindClientUseCase() client.FindClientUseCase {
+	findClientUcOnce.Do(func() {
+		findClientUc = usecase.NewFindClientUseCase(UserRepository())
+	})
+	return findClientUc
+}
+
+var (
 	listClientsUcOnce sync.Once
 	listClientsUc     client.ListClientsUseCase
 )

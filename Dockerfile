@@ -11,7 +11,7 @@ COPY . .
 RUN go mod download && go mod verify
 
 RUN go install github.com/swaggo/swag/cmd/swag@latest
-RUN swag init --generalInfo ./internal/http/server.go --output ./docs/swagger
+RUN swag init --generalInfo ./internal/http/server.go --output ./docs
 
 RUN GOOS=linux GOARCH=amd64 go build --ldflags='-w -s -extldflags "-static"' -v -a -o /go/bin/app .
 
@@ -22,7 +22,7 @@ RUN adduser -D user-manager
 USER user-manager
 
 COPY --from=builder /go/bin/app /usr/bin/app
-COPY --from=builder /app/docs/swagger /docs/swagger
+COPY --from=builder /app/docs /docs
 
 EXPOSE ${HTTP_PORT:-9000}
 ENTRYPOINT ["/usr/bin/app"]

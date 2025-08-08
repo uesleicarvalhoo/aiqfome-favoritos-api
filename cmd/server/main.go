@@ -32,6 +32,7 @@ func main() {
 	getClientFavoritesUc := ioc.GetClientFavoritesUseCase()
 	addProductToFavoritesUc := ioc.AddProductToFavoritesUseCase()
 	removeProductFromFavoritesUc := ioc.RemoveProductFromFavoritesUseCase()
+	findClientsUc := ioc.FindClientUseCase()
 	listClientsUc := ioc.ListClientsUseCase()
 	updateClientUc := ioc.UpdateClientsUseCase()
 	deleteClientUc := ioc.DeleteClientUseCase()
@@ -48,6 +49,7 @@ func main() {
 		getClientFavoritesUc,
 		addProductToFavoritesUc,
 		removeProductFromFavoritesUc,
+		findClientsUc,
 		listClientsUc,
 		updateClientUc,
 		deleteClientUc,

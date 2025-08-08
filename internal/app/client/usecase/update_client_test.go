@@ -9,21 +9,16 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/uesleicarvalhoo/aiqfome/internal/app/client/dto"
-	fixtureDTO "github.com/uesleicarvalhoo/aiqfome/internal/app/client/dto/fixture"
 	"github.com/uesleicarvalhoo/aiqfome/internal/app/client/usecase"
 	"github.com/uesleicarvalhoo/aiqfome/pkg/uuid"
-	"github.com/uesleicarvalhoo/aiqfome/user"
 	fixtureUser "github.com/uesleicarvalhoo/aiqfome/user/fixture"
 	clientMocks "github.com/uesleicarvalhoo/aiqfome/user/mocks"
 )
 
-func TestUpdateClientUseCase_Execute(t *testing.T) {
+func TestFiendClientUseCase_Execute(t *testing.T) {
 	t.Parallel()
 
 	clientID := uuid.NextID()
-
-	paramsBuilder := fixtureDTO.AnyUpdateClientParams().
-		WithClientID(clientID)
 
 	userBuilder := fixtureUser.AnyUser().
 		WithID(clientID).
@@ -31,55 +26,30 @@ func TestUpdateClientUseCase_Execute(t *testing.T) {
 		WithEmail("client1@email.com").
 		WithActive(true)
 
-	clientBuilder := fixtureDTO.AnyClient().
-		WithID(clientID).
-		WithName("Client 1").
-		WithEmail("client1@email.com").
-		WithActive(true)
-
-	// values for update
-	newName := "New Name"
-	newActive := false
-
 	testCases := []struct {
 		about        string
-		params       dto.UpdateClientParams
+		clientID     uuid.ID
 		setupRepo    func(r *clientMocks.Repository)
 		expectedErr  string
 		expectedResp dto.Client
 	}{
 		{
-			about:       "when params are invalid",
-			params:      paramsBuilder.WithClientID(uuid.Nil).Build(),
-			expectedErr: "[AQF002] clientId: campo inválido",
+			about:    "when repo fails",
+			clientID: clientID,
+			setupRepo: func(r *clientMocks.Repository) {
+				r.On("Find", mock.Anything, clientID).
+					Return(userBuilder.Build(), errors.New("db error"))
+			},
+			expectedErr: "[AQF004] failed to find client | cause: db error",
 		},
 		{
-			about:  "when repo update fails",
-			params: paramsBuilder.WithName(newName).WithActive(newActive).Build(),
+			about:    "when all is valid",
+			clientID: clientID,
 			setupRepo: func(r *clientMocks.Repository) {
 				r.On("Find", mock.Anything, clientID).
 					Return(userBuilder.Build(), nil)
-
-				r.On("Update", mock.Anything, mock.MatchedBy(func(c user.User) bool {
-					return c.ID == clientID && c.Name == newName && c.Active == newActive
-				})).
-					Return(errors.New("db error"))
 			},
-			expectedErr: "[AQF004] failed to update client | cause: db error",
-		},
-		{
-			about:  "when all is valid",
-			params: paramsBuilder.WithName(newName).WithActive(newActive).Build(),
-			setupRepo: func(r *clientMocks.Repository) {
-				r.On("Find", mock.Anything, clientID).
-					Return(userBuilder.Build(), nil)
-
-				r.On("Update", mock.Anything, mock.MatchedBy(func(c user.User) bool {
-					return c.ID == clientID && c.Name == newName && c.Active == newActive
-				})).
-					Return(nil)
-			},
-			expectedResp: clientBuilder.WithName(newName).WithActive(newActive).Build(),
+			expectedResp: dto.FromDomain(userBuilder.Build()),
 		},
 	}
 
@@ -95,10 +65,10 @@ func TestUpdateClientUseCase_Execute(t *testing.T) {
 				tc.setupRepo(repo)
 			}
 
-			uc := usecase.NewUpdateClientUseCase(repo)
+			uc := usecase.NewFindClientUseCase(repo)
 
 			// Action
-			res, err := uc.Execute(context.Background(), tc.params)
+			res, err := uc.Execute(context.Background(), tc.clientID)
 
 			// Assert
 			if tc.expectedErr != "" {
