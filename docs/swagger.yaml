@@ -1,0 +1,538 @@
+definitions:
+  dto.AddProductToFavoritesParams:
+    properties:
+      productId:
+        type: integer
+    type: object
+  dto.AuthTokens:
+    properties:
+      accessToken:
+        type: string
+      refreshToken:
+        type: string
+    type: object
+  dto.Client:
+    properties:
+      active:
+        type: boolean
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.ClientFavorites:
+    properties:
+      clientId:
+        type: string
+      pages:
+        type: integer
+      products:
+        items:
+          $ref: '#/definitions/product.Product'
+        type: array
+      total:
+        type: integer
+    type: object
+  dto.PaginatedClients:
+    properties:
+      clients:
+        items:
+          $ref: '#/definitions/dto.Client'
+        type: array
+      pages:
+        type: integer
+      total:
+        type: integer
+    type: object
+  dto.ProductFavorite:
+    properties:
+      clientId:
+        type: string
+      product:
+        $ref: '#/definitions/product.Product'
+    type: object
+  dto.RefreshTokenParams:
+    properties:
+      refreshToken:
+        type: string
+    type: object
+  dto.SignInParams:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  dto.SignUpParams:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    type: object
+  dto.UpdateClientParams:
+    properties:
+      active:
+        type: boolean
+      name:
+        type: string
+      role:
+        $ref: '#/definitions/role.Role'
+    type: object
+  product.Product:
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      image:
+        type: string
+      price:
+        type: number
+      rating:
+        $ref: '#/definitions/product.Rating'
+      title:
+        type: string
+    type: object
+  product.Rating:
+    properties:
+      count:
+        type: integer
+      rate:
+        type: number
+    type: object
+  role.Role:
+    enum:
+    - admin
+    - client
+    type: string
+    x-enum-varnames:
+    - RoleAdmin
+    - RoleClient
+  utils.APIError:
+    description: default error API format
+    properties:
+      code:
+        type: string
+      details:
+        additionalProperties: {}
+        type: object
+      message:
+        type: string
+      method:
+        type: string
+      path:
+        type: string
+      timestamp:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: This is api for magalu challenge
+  title: Aiqfome api challenge
+  version: 1.0.0
+paths:
+  /auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate client using email and password
+      parameters:
+      - description: SignIn credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SignInParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Access and Refresh Tokens
+          schema:
+            $ref: '#/definitions/dto.AuthTokens'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "422":
+          description: Invalid params
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIError'
+      summary: Sign in a client
+      tags:
+      - Auth
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Register a new client with name, email and password
+      parameters:
+      - description: SignUp registration data
+        in: body
+        name: registration
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SignUpParams'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created client
+          schema:
+            $ref: '#/definitions/dto.Client'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "409":
+          description: Conflict (email exists)
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "422":
+          description: Invalid params
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIError'
+      summary: Sign up a new client
+      tags:
+      - Auth
+  /auth/token/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Generate new access and refresh tokens
+      parameters:
+      - description: Refresh token data
+        in: body
+        name: tokenRefresh
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshTokenParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: New tokens
+          schema:
+            $ref: '#/definitions/dto.AuthTokens'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "422":
+          description: Invalid params
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIError'
+      summary: Refresh tokens
+      tags:
+      - Auth
+  /clients:
+    get:
+      consumes:
+      - application/json
+      description: Return a list with paginated clients
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Clients per page, default 10
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PaginatedClients'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Listar clients
+      tags:
+      - Clients
+  /clients/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove the cliente by the given ID
+      parameters:
+      - description: Client ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Remove client
+      tags:
+      - Clients
+    post:
+      consumes:
+      - application/json
+      description: Update client data by the given ID
+      parameters:
+      - description: Client ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update, if nil, it will be ignored
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateClientParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Client'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Update client
+      tags:
+      - Clients
+  /me:
+    get:
+      consumes:
+      - application/json
+      description: Get current client data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get current client data
+      tags:
+      - Me
+  /me/favorites:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve paginated list of favorite products for the authenticated
+        client
+      parameters:
+      - description: Page number, starts from 0
+        in: query
+        name: page
+        type: integer
+      - description: Items per page, default 10
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ClientFavorites'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "422":
+          description: Invalid params
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Get client favorites
+      tags:
+      - Me/Favorites
+    post:
+      consumes:
+      - application/json
+      description: Add a product to the authenticated client's favorites list
+      parameters:
+      - description: Product to add
+        in: body
+        name: favorite
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AddProductToFavoritesParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Added favorite
+          schema:
+            $ref: '#/definitions/dto.ProductFavorite'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "422":
+          description: Invalid params
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Add product to favorites
+      tags:
+      - Me/Favorites
+  /me/favorites/product/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a product from the authenticated client's favorites list
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "422":
+          description: Invalid params
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Remove product from favorites
+      tags:
+      - Me/Favorites
+securityDefinitions:
+  BearerAuth:
+    description: '"Enter your Bearer token in the format: `Bearer {token}`"'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
