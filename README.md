@@ -90,6 +90,7 @@ O projeto utiliza uma estrutura que é um mix de DDD com Clean arch, prezando is
 ### Autenticação
 
 A autenticação é feita através de um token JWT, a aplicação recebe ela através do Header `Authorization` com o valor `Bearer {token}`, há um middleware que faz a validação deste token e permite (ou não) o acesso as rotas protegidas.
+Também há uma camada de cache para evitar chamadas repetidas para valdiar se o cliente existe no banco
 
 ### Autorização
 
@@ -125,9 +126,5 @@ Um ponto muito importante para garantir a saude da aplicação são as métricas
 - Testes E2E
 Outro ponto muito importante é a necessidade de configurar uma esteira de testes E2E de pelo menos os fluxos mais críticos da aplicação
 
-- Cache
-Adicionar cache na camada de 
-
 - Invalidar tokens
 Manter um controle dos tokens do usuário e ter a opção de invalidar um token
-
