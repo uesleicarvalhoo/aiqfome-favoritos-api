@@ -1,4 +1,4 @@
-name: Go CI
+name: Run lint
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
+          go-version: '1.24.5'
 
       - name: Install gocritic
         run: go install -v github.com/go-critic/go-critic/cmd/gocritic@latest

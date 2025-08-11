@@ -1,4 +1,4 @@
-name: Go CI
+name: Run unit tests
 
 on:
   push:
@@ -18,10 +18,22 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
+          go-version: '1.24.5'
 
-      - name: Install gotestfmt
-        run: go install github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt@latest
+      - name: Set up gotestfmt
+        uses: GoTestTools/gotestfmt-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run tests
-        run: go test -covermode=atomic -count=1 -v ./... -short -race -coverprofile coverage.out -json -ldflags=-extldflags=-Wl | gotestfmt
+        run: |
+          set -euo pipefail
+          go test -count=1 -short -race -json -v ./... 2>&1 | tee /tmp/gotest.log | gotestfmt
+
+      - name: Upload test log
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: test-log
+          path: /tmp/gotest.log
+          if-no-files-found: error
