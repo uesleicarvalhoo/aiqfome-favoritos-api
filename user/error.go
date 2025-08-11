@@ -2,4 +2,4 @@ package user
 
 import "errors"
 
-var ErrNotFound = errors.New("client not found")
+var ErrNotFound = errors.New("user not found")
