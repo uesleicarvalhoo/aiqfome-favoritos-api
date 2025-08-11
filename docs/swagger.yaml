@@ -308,8 +308,46 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "204":
           description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.APIError'
+      security:
+      - BearerAuth: []
+      summary: Remove client
+      tags:
+      - Clients
+    get:
+      consumes:
+      - application/json
+      description: Get client data by the given ID
+      parameters:
+      - description: Client ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.Client'
         "400":
           description: Bad Request
           schema:
@@ -332,10 +370,10 @@ paths:
             $ref: '#/definitions/utils.APIError'
       security:
       - BearerAuth: []
-      summary: Remove client
+      summary: Get client
       tags:
       - Clients
-    post:
+    patch:
       consumes:
       - application/json
       description: Update client data by the given ID

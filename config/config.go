@@ -18,8 +18,8 @@ var config = map[string]string{
 	"HTTP_SERVER_PORT": "5000",
 
 	// Auth
-	"ACESS_TOKEN_SECRET_KEY":      "my-secret-key",
-	"REFRESH_TOKEN_SECRET_KEY":    "my-secret-key",
+	"ACESS_TOKEN_SECRET_KEY":      "",
+	"REFRESH_TOKEN_SECRET_KEY":    "",
 	"JWT_ISSUER":                  "aiqfome-challange-backend",
 	"ACCESS_TOKEN_DURATION":       "15m",
 	"REFRESH_TOKEN_DURATION":      "720h",
@@ -36,6 +36,15 @@ var config = map[string]string{
 	"DATABASE_CONN_MAX_TTL":        "1h",
 	"DATABASE_TIMEOUT_SECONDS":     "30",
 	"DATABASE_LOCK_TIMEOUT_MILLIS": "5000",
+
+	// Cache
+	"REDIS_HOST":                      "localhost",
+	"REDIS_PORT":                      "6379",
+	"REDIS_USER":                      "",
+	"REDIS_PASSWORD":                  "",
+	"REDIS_USE_SSL":                   "false",
+	"ROLE_PERMISSIONS_CACHE_DURATION": "1h",
+	"USER_CACHE_DURATION":             "5m",
 
 	// Tracer
 	"TRACER_ENDPOINT": "http://localhost:9411/api/v2/spans",

@@ -3,7 +3,9 @@ package usecase_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -11,6 +13,7 @@ import (
 	"github.com/uesleicarvalhoo/aiqfome/internal/app/auth/dto"
 	"github.com/uesleicarvalhoo/aiqfome/internal/app/auth/dto/fixture"
 	usecase "github.com/uesleicarvalhoo/aiqfome/internal/app/auth/usecase"
+	mocksCache "github.com/uesleicarvalhoo/aiqfome/pkg/cache/mocks"
 	"github.com/uesleicarvalhoo/aiqfome/pkg/uuid"
 	"github.com/uesleicarvalhoo/aiqfome/role"
 	"github.com/uesleicarvalhoo/aiqfome/role/mocks"
@@ -23,6 +26,7 @@ func TestAuthorizeUseCase_Execute(t *testing.T) {
 	clientID := uuid.NextID()
 	clientRole := role.RoleClient
 	resource := role.ResourceClient
+	cacheDuration := time.Minute
 
 	// Parâmetros básicos
 	clientBuilder := fixtureUser.AnyUser().
@@ -37,12 +41,19 @@ func TestAuthorizeUseCase_Execute(t *testing.T) {
 	testCases := []struct {
 		about         string
 		setupRepo     func(repo *mocks.Repository)
+		setupCache    func(cache *mocksCache.Cache)
 		params        dto.AuthorizeParams
+		cacheExpTime  time.Duration
 		expectedError string
 	}{
 		{
-			about:  "when role not found in repo",
-			params: paramsBuilder.Build(),
+			about:        "when role not found in repo",
+			params:       paramsBuilder.Build(),
+			cacheExpTime: cacheDuration,
+			setupCache: func(cache *mocksCache.Cache) {
+				cache.On("Get", mock.Anything, fmt.Sprintf("role-permissions:%s", clientRole)).
+					Return(nil, nil)
+			},
 			setupRepo: func(repo *mocks.Repository) {
 				repo.On("FindPermissions", mock.Anything, clientRole).
 					Return(nil, &role.ErrNotFound{Name: string(clientRole)})
@@ -50,8 +61,13 @@ func TestAuthorizeUseCase_Execute(t *testing.T) {
 			expectedError: "[AQF003] role não encontrada",
 		},
 		{
-			about:  "when repo returns generic error",
-			params: paramsBuilder.Build(),
+			about:        "when repo returns generic error",
+			params:       paramsBuilder.Build(),
+			cacheExpTime: cacheDuration,
+			setupCache: func(cache *mocksCache.Cache) {
+				cache.On("Get", mock.Anything, fmt.Sprintf("role-permissions:%s", clientRole)).
+					Return(nil, nil)
+			},
 			setupRepo: func(repo *mocks.Repository) {
 				repo.On("FindPermissions", mock.Anything, clientRole).
 					Return(nil, errors.New("i'm a repository error"))
@@ -59,12 +75,19 @@ func TestAuthorizeUseCase_Execute(t *testing.T) {
 			expectedError: "[AQF004] ocorreu um erro ao obter as permissões | cause: i'm a repository error",
 		},
 		{
-			about: "when role is admin, should by pass permissions",
+			about:        "when role is admin, should by pass permissions",
+			cacheExpTime: cacheDuration,
 			params: paramsBuilder.WithUser(
 				clientBuilder.
 					WithRole(role.RoleAdmin).
 					Build(),
 			).Build(),
+			setupCache: func(cache *mocksCache.Cache) {
+				cache.On("Get", mock.Anything, fmt.Sprintf("role-permissions:%s", role.RoleAdmin)).
+					Return(nil, nil)
+				cache.On("Set", mock.Anything, fmt.Sprintf("role-permissions:%s", role.RoleAdmin), mock.Anything, cacheDuration).
+					Return(nil)
+			},
 			setupRepo: func(repo *mocks.Repository) {
 				repo.On("FindPermissions", mock.Anything, role.RoleAdmin).
 					Return([]role.Permission{}, nil)
@@ -72,8 +95,14 @@ func TestAuthorizeUseCase_Execute(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			about:  "when has manage permission, and require manage",
-			params: paramsBuilder.WithAction(role.ActionManage).Build(),
+			about:        "when has manage permission, and require manage",
+			cacheExpTime: cacheDuration,
+			params:       paramsBuilder.WithAction(role.ActionManage).Build(),
+			setupCache: func(cache *mocksCache.Cache) {
+				cache.On("Get", mock.Anything, fmt.Sprintf("role-permissions:%s", clientRole)).
+					Return(nil, nil)
+				cache.On("Set", mock.Anything, fmt.Sprintf("role-permissions:%s", clientRole), mock.Anything, cacheDuration).Return(nil)
+			},
 			setupRepo: func(repo *mocks.Repository) {
 				repo.On("FindPermissions", mock.Anything, clientRole).
 					Return([]role.Permission{
@@ -83,8 +112,14 @@ func TestAuthorizeUseCase_Execute(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			about:  "when has manage permission, and require read",
-			params: paramsBuilder.WithAction(role.ActionRead).Build(),
+			about:        "when has manage permission, and require read",
+			cacheExpTime: cacheDuration,
+			params:       paramsBuilder.WithAction(role.ActionRead).Build(),
+			setupCache: func(cache *mocksCache.Cache) {
+				cache.On("Get", mock.Anything, fmt.Sprintf("role-permissions:%s", clientRole)).
+					Return(nil, nil)
+				cache.On("Set", mock.Anything, fmt.Sprintf("role-permissions:%s", clientRole), mock.Anything, cacheDuration).Return(nil)
+			},
 			setupRepo: func(repo *mocks.Repository) {
 				repo.On("FindPermissions", mock.Anything, clientRole).
 					Return([]role.Permission{
@@ -94,8 +129,14 @@ func TestAuthorizeUseCase_Execute(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			about:  "when has manage permission, and require write",
-			params: paramsBuilder.WithAction(role.ActionWrite).Build(),
+			about:        "when has manage permission, and require write",
+			cacheExpTime: cacheDuration,
+			params:       paramsBuilder.WithAction(role.ActionWrite).Build(),
+			setupCache: func(cache *mocksCache.Cache) {
+				cache.On("Get", mock.Anything, fmt.Sprintf("role-permissions:%s", clientRole)).
+					Return(nil, nil)
+				cache.On("Set", mock.Anything, fmt.Sprintf("role-permissions:%s", clientRole), mock.Anything, cacheDuration).Return(nil)
+			},
 			setupRepo: func(repo *mocks.Repository) {
 				repo.On("FindPermissions", mock.Anything, clientRole).
 					Return([]role.Permission{
@@ -105,8 +146,14 @@ func TestAuthorizeUseCase_Execute(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			about:  "when has exact permission",
-			params: paramsBuilder.WithAction(role.ActionRead).Build(),
+			about:        "when has exact permission",
+			cacheExpTime: cacheDuration,
+			params:       paramsBuilder.WithAction(role.ActionRead).Build(),
+			setupCache: func(cache *mocksCache.Cache) {
+				cache.On("Get", mock.Anything, fmt.Sprintf("role-permissions:%s", clientRole)).
+					Return(nil, nil)
+				cache.On("Set", mock.Anything, fmt.Sprintf("role-permissions:%s", clientRole), mock.Anything, cacheDuration).Return(nil)
+			},
 			setupRepo: func(repo *mocks.Repository) {
 				repo.On("FindPermissions", mock.Anything, clientRole).
 					Return([]role.Permission{
@@ -116,8 +163,14 @@ func TestAuthorizeUseCase_Execute(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			about:  "when has permission to write and require read",
-			params: paramsBuilder.WithAction(role.ActionRead).Build(),
+			about:        "when has permission to write and require read",
+			params:       paramsBuilder.WithAction(role.ActionRead).Build(),
+			cacheExpTime: cacheDuration,
+			setupCache: func(cache *mocksCache.Cache) {
+				cache.On("Get", mock.Anything, fmt.Sprintf("role-permissions:%s", clientRole)).
+					Return(nil, nil)
+				cache.On("Set", mock.Anything, fmt.Sprintf("role-permissions:%s", clientRole), mock.Anything, cacheDuration).Return(nil)
+			},
 			setupRepo: func(repo *mocks.Repository) {
 				repo.On("FindPermissions", mock.Anything, clientRole).
 					Return([]role.Permission{
@@ -127,8 +180,14 @@ func TestAuthorizeUseCase_Execute(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			about:  "when no permission matches",
-			params: paramsBuilder.WithUser(clientBuilder.Build()).WithResource(role.ResourceFavorites).Build(),
+			about:        "when no permission matches",
+			params:       paramsBuilder.WithUser(clientBuilder.Build()).WithResource(role.ResourceFavorites).Build(),
+			cacheExpTime: cacheDuration,
+			setupCache: func(cache *mocksCache.Cache) {
+				cache.On("Get", mock.Anything, fmt.Sprintf("role-permissions:%s", clientRole)).
+					Return(nil, nil)
+				cache.On("Set", mock.Anything, fmt.Sprintf("role-permissions:%s", clientRole), mock.Anything, cacheDuration).Return(nil)
+			},
 			setupRepo: func(repo *mocks.Repository) {
 				repo.On("FindPermissions", mock.Anything, clientRole).
 					Return([]role.Permission{
@@ -150,11 +209,16 @@ func TestAuthorizeUseCase_Execute(t *testing.T) {
 				tc.setupRepo(repo)
 			}
 
-			uc := usecase.NewAuthorizeUseCase(repo)
+			cache := mocksCache.NewCache(t)
+			if tc.setupCache != nil {
+				tc.setupCache(cache)
+			}
+
+			uc := usecase.NewAuthorizeUseCase(repo, cache, tc.cacheExpTime)
 
 			// Action
 			err := uc.Execute(context.Background(), tc.params)
-
+			time.Sleep(time.Microsecond * 100) // Wait goroutine complete
 			// Assert
 			if tc.expectedError != "" {
 				assert.EqualError(t, err, tc.expectedError)

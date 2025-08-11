@@ -30,7 +30,18 @@ services:
       - 9411:9411
     networks:
       - otel-net
+  redis:
+    image: redis
+    container_name: redis
+
+    ports:
+      - 6379:6379
+
+    networks:
+      - redis-net
+
 
 networks:
   db-net:
   otel-net:
+  redis-net:

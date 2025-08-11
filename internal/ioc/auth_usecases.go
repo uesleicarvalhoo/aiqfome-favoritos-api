@@ -75,7 +75,12 @@ var (
 
 func AuthenticateUseCase() auth.AuthenticateUseCase {
 	authenticateUcOnce.Do(func() {
-		authenticateUc = usecase.NewAuthenticateUseCase(UserRepository(), AccessTokenProvider())
+		authenticateUc = usecase.NewAuthenticateUseCase(
+			UserRepository(),
+			AccessTokenProvider(),
+			Cache(),
+			config.GetDuration("USER_CACHE_DURATION"),
+		)
 	})
 
 	return authenticateUc
@@ -88,7 +93,11 @@ var (
 
 func AuthorizeUseCase() auth.AuthorizeUseCase {
 	authorizeUcOnce.Do(func() {
-		authorizeUc = usecase.NewAuthorizeUseCase(RoleRepository())
+		authorizeUc = usecase.NewAuthorizeUseCase(
+			RoleRepository(),
+			Cache(),
+			config.GetDuration("ROLE_PERMISSIONS_CACHE_DURATION"),
+		)
 	})
 
 	return authorizeUc
