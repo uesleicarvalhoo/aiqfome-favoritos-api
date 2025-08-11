@@ -31,7 +31,7 @@ jobs:
           go test -count=1 -short -race -json -v ./... 2>&1 | tee /tmp/gotest.log | gotestfmt
 
       - name: Upload test log
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-log
