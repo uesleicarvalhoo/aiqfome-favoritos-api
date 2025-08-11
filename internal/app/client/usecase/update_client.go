@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 
 	usecase "github.com/uesleicarvalhoo/aiqfome/internal/app/client"
 	"github.com/uesleicarvalhoo/aiqfome/internal/app/client/dto"
@@ -38,6 +39,15 @@ func (u *updateClientUseCase) Execute(ctx context.Context, p dto.UpdateClientPar
 	if err != nil {
 		logger.ErrorF(ctx, "error while trying to find client", logger.Fields{
 			"error":     err.Error(),
+			"client_id": p.ClientID,
+		})
+		if errors.Is(err, user.ErrNotFound) {
+			return dto.Client{}, domainerror.New(domainerror.ResourceNotFound, "cliente não encontrado", map[string]any{
+				"client_id": p.ClientID,
+			})
+		}
+
+		return dto.Client{}, domainerror.Wrap(err, domainerror.DependecyError, "erro ao buscar cliente", map[string]any{
 			"client_id": p.ClientID,
 		})
 	}

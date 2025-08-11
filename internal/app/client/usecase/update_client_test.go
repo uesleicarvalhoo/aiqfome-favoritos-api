@@ -40,7 +40,7 @@ func TestFiendClientUseCase_Execute(t *testing.T) {
 				r.On("Find", mock.Anything, clientID).
 					Return(userBuilder.Build(), errors.New("db error"))
 			},
-			expectedErr: "[AQF004] failed to find client | cause: db error",
+			expectedErr: "[AQF004] error while to trying find client | cause: db error",
 		},
 		{
 			about:    "when all is valid",

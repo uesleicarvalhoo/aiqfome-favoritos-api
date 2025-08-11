@@ -258,7 +258,7 @@ func Test_deleteClient(t *testing.T) {
 					On("Execute", mock.Anything, clientDTO.DeleteClientParams{ClientID: clientID}).
 					Return(nil)
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusNoContent,
 		},
 	}
 
